@@ -10,7 +10,7 @@ import com.rkc.zds.resource.model.UserData;
 import com.rkc.zds.resource.repository.UserRepository;
 import com.rkc.zds.resource.service.UserReadService;
 
-@Service
+@Service("userReadService")
 public class UserReadServiceImpl implements UserReadService {
 
 	@Autowired

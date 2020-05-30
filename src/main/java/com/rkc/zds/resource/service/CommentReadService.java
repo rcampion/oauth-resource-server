@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 @Mapper
-@Service
 public interface CommentReadService {
     CommentData findById(@Param("id") Integer id, UserDto user);
 

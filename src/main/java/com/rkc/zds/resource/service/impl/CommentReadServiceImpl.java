@@ -15,7 +15,7 @@ import com.rkc.zds.resource.repository.ArticleCommentRepository;
 import com.rkc.zds.resource.repository.UserRepository;
 import com.rkc.zds.resource.service.CommentReadService;
 
-@Service
+@Service("commentReadService")
 public class CommentReadServiceImpl implements CommentReadService {
 
 	@Autowired

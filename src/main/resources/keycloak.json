@@ -1,6 +1,6 @@
 {
   "realm": "zdslogic",
-  "auth-server-url": "http://localhost:8080/auth/",
+  "auth-server-url": "http://localhost:18080/auth/",
   "ssl-required": "external",
   "resource": "newClient",
   "credentials": {
