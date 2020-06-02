@@ -1,20 +1,39 @@
 package com.rkc.zds.resource.web.controller;
 
-import java.util.Date;
+import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
-import com.fasterxml.jackson.annotation.JsonRootName;
+import org.keycloak.KeycloakPrincipal;
+import org.keycloak.KeycloakSecurityContext;
+import org.keycloak.representations.AccessToken;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rkc.zds.resource.dto.ArticleDto;
 import com.rkc.zds.resource.dto.ArticleTagArticleDto;
 import com.rkc.zds.resource.dto.ArticleTagDto;
-import com.rkc.zds.resource.dto.ContactDto;
-import com.rkc.zds.resource.dto.GroupMemberDto;
-import com.rkc.zds.resource.dto.GroupMemberElementDto;
 import com.rkc.zds.resource.dto.UserDto;
-import com.rkc.zds.resource.exception.InvalidRequestException;
 import com.rkc.zds.resource.model.ArticleData;
 import com.rkc.zds.resource.model.ArticleDataList;
 import com.rkc.zds.resource.repository.ArticleRepository;
@@ -23,44 +42,6 @@ import com.rkc.zds.resource.repository.ArticleTagRepository;
 import com.rkc.zds.resource.repository.UserRepository;
 import com.rkc.zds.resource.service.ArticleQueryService;
 import com.rkc.zds.resource.service.ArticleReadService;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import javax.validation.constraints.NotBlank;
-
-import org.keycloak.KeycloakPrincipal;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
-import org.keycloak.representations.AccessToken;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 @CrossOrigin(origins = "http://www.zdslogic-development.com:4200")
 @RestController

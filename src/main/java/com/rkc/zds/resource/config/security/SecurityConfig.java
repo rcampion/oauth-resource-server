@@ -79,6 +79,8 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
           .authorizeRequests()
             .antMatchers(HttpMethod.GET, "/api/articles**", "/api/tags*")
               .permitAll()
+            .antMatchers(HttpMethod.POST, "/api/sso/login")
+              .permitAll()
             .anyRequest()
               .authenticated()
         .and()
