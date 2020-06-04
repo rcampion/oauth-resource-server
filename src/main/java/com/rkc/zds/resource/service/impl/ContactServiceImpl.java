@@ -101,9 +101,9 @@ public class ContactServiceImpl implements ContactService {
 
 	@Override
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
-	public void saveContact(ContactDto contact) {
+	public ContactDto saveContact(ContactDto contact) {
 
-		contactRepo.save(contact);
+		return contactRepo.save(contact);
 	}
 
 	@Override

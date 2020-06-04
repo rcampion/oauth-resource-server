@@ -15,6 +15,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.rkc.zds.resource.dto.ContactDto;
 import com.rkc.zds.resource.dto.EMailDto;
 import com.rkc.zds.resource.dto.PhoneDto;
@@ -48,15 +51,17 @@ public class ContactController {
 
 	private static final String DEFAULT_PAGE_DISPLAYED_TO_USER = "0";
 
+	private int contactId = 0;
+
 	@Autowired
 	ContactService contactService;
 
 	@Autowired
 	EMailService emailService;
-	
+
 	@Autowired
 	PhoneService phoneService;
-	
+
 	@Autowired
 	private MessageSource messageSource;
 
@@ -69,27 +74,29 @@ public class ContactController {
 		ResponseEntity<Page<ContactDto>> response = new ResponseEntity<>(page, HttpStatus.OK);
 		return response;
 	}
-	
+
 	@RequestMapping(value = "/group/{groupId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Page<ContactDto>> findFilteredContacts(@PathVariable int groupId, Pageable pageable, HttpServletRequest req) {
+	public ResponseEntity<Page<ContactDto>> findFilteredContacts(@PathVariable int groupId, Pageable pageable,
+			HttpServletRequest req) {
 		Page<ContactDto> page = contactService.findFilteredContacts(pageable, groupId);
 		ResponseEntity<Page<ContactDto>> response = new ResponseEntity<>(page, HttpStatus.OK);
 		return response;
 	}
-	
+
 	@RequestMapping(value = "/email/{contactId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Page<EMailDto>> findEMails(@PathVariable int contactId, Pageable pageable, HttpServletRequest req) {
+	public ResponseEntity<Page<EMailDto>> findEMails(@PathVariable int contactId, Pageable pageable,
+			HttpServletRequest req) {
 		Page<EMailDto> page = emailService.findEMails(pageable, contactId);
 		ResponseEntity<Page<EMailDto>> response = new ResponseEntity<>(page, HttpStatus.OK);
 		return response;
 	}
-	
+
 	@RequestMapping(value = "/email/email/{emailId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<EMailDto>  getEmail(@PathVariable int emailId) {
+	public ResponseEntity<EMailDto> getEmail(@PathVariable int emailId) {
 		EMailDto email = emailService.getEMail(emailId);
 		return new ResponseEntity<>(email, HttpStatus.OK);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/email/email", method = RequestMethod.POST, consumes = {
 			"application/json;charset=UTF-8" }, produces = { "application/json;charset=UTF-8" })
@@ -113,14 +120,14 @@ public class ContactController {
 
 		emailService.saveEMail(emailDTO);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/email/{id}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String deleteEmail(@PathVariable int id) {
 		emailService.deleteEMail(id);
 		return Integer.toString(id);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/email/email", method = RequestMethod.PUT, consumes = {
 			"application/json;charset=UTF-8" }, produces = { "application/json;charset=UTF-8" })
@@ -168,20 +175,21 @@ public class ContactController {
 
 		emailService.sendEMail(emailSend);
 	}
-	
+
 	@RequestMapping(value = "/phone/{contactId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Page<PhoneDto>> findPhones(@PathVariable int contactId, Pageable pageable, HttpServletRequest req) {
+	public ResponseEntity<Page<PhoneDto>> findPhones(@PathVariable int contactId, Pageable pageable,
+			HttpServletRequest req) {
 		Page<PhoneDto> page = phoneService.findPhones(pageable, contactId);
 		ResponseEntity<Page<PhoneDto>> response = new ResponseEntity<>(page, HttpStatus.OK);
 		return response;
 	}
-	
+
 	@RequestMapping(value = "/phone/phone/{phoneId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<PhoneDto>  getPhone(@PathVariable int phoneId) {
+	public ResponseEntity<PhoneDto> getPhone(@PathVariable int phoneId) {
 		PhoneDto phone = phoneService.getPhone(phoneId);
 		return new ResponseEntity<>(phone, HttpStatus.OK);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/phone/phone", method = RequestMethod.POST, consumes = {
 			"application/json;charset=UTF-8" }, produces = { "application/json;charset=UTF-8" })
@@ -205,14 +213,14 @@ public class ContactController {
 
 		phoneService.savePhone(phoneDTO);
 	}
-	
-	@PreAuthorize("hasRole('ROLE_ADMIN')")	
+
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/phone/{id}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String deletePhone(@PathVariable int id) {
 		phoneService.deletePhone(id);
 		return Integer.toString(id);
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/phone/phone", method = RequestMethod.PUT, consumes = {
 			"application/json;charset=UTF-8" }, produces = { "application/json;charset=UTF-8" })
@@ -236,7 +244,7 @@ public class ContactController {
 		phoneService.updatePhone(phone);
 
 	}
-		
+
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<ContactDto> getContact(@PathVariable int id, HttpServletRequest req) {
 		ContactDto contact = contactService.getContact(id);
@@ -244,18 +252,19 @@ public class ContactController {
 	}
 
 	@RequestMapping(value = "/search", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Page<ContactDto>> findAllByRsql(Pageable pageable, @RequestParam(value = "search") String search) {
-	    Node rootNode = new RSQLParser().parse(search);
-	    Specification<ContactDto> spec = rootNode.accept(new CustomRsqlVisitor<ContactDto>());
-	    //return dao.findAll(spec);
+	public ResponseEntity<Page<ContactDto>> findAllByRsql(Pageable pageable,
+			@RequestParam(value = "search") String search) {
+		Node rootNode = new RSQLParser().parse(search);
+		Specification<ContactDto> spec = rootNode.accept(new CustomRsqlVisitor<ContactDto>());
+		// return dao.findAll(spec);
 		Page<ContactDto> page = contactService.searchContacts(pageable, spec);
 		return new ResponseEntity<>(page, HttpStatus.OK);
 	}
-    
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "", method = RequestMethod.POST, consumes = {
 			"application/json;charset=UTF-8" }, produces = { "application/json;charset=UTF-8" })
-	public void createContact(@RequestBody String jsonString) {
+	public ContactDto createContact(@RequestBody String jsonString) {
 
 		ObjectMapper mapper = new ObjectMapper();
 
@@ -273,7 +282,16 @@ public class ContactController {
 			e.printStackTrace();
 		}
 
-		contactService.saveContact(contactDTO);
+		ContactDto dto = contactService.saveContact(contactDTO);
+		this.contactId = dto.getId();
+		//post();
+		return dto;
+	}
+
+	@MessageMapping("/posts/create")
+	@SendTo("/topic/posts/created")
+	public ContactDto save(ContactDto post) {
+		return post;
 	}
 
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
@@ -299,11 +317,11 @@ public class ContactController {
 		contactService.updateContact(contact);
 
 	}
-	
+
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String deleteContact(@PathVariable int id) {
 		contactService.deleteContact(id);
 		return Integer.toString(id);
-	}	
+	}
 }

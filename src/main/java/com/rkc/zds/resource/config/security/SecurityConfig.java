@@ -77,7 +77,7 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         http.cors()
         .and()
           .authorizeRequests()
-            .antMatchers(HttpMethod.GET, "/api/articles**", "/api/tags*")
+            .antMatchers(HttpMethod.GET, "/api/articles**", "/api/tags*", "/live/info*")
               .permitAll()
             .antMatchers(HttpMethod.POST, "/api/sso/login")
               .permitAll()

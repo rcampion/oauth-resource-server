@@ -32,7 +32,7 @@ public interface ContactService {
        
     ContactDto getContact(int id);    
      
-    public void saveContact(ContactDto contact);
+    public ContactDto saveContact(ContactDto contact);
        
     public void updateContact(ContactDto contact);
 
