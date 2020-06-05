@@ -62,8 +62,8 @@ public class ContactController {
 	@Autowired
 	PhoneService phoneService;
 
-	@Autowired
-	private MessageSource messageSource;
+//	@Autowired
+//	private MessageSource messageSource;
 
 	@Value("10")
 	private int maxResults;
@@ -317,7 +317,13 @@ public class ContactController {
 		contactService.updateContact(contact);
 
 	}
-
+	
+	@MessageMapping("/contacts/update")
+	@SendTo("/topic/contacts/updated")
+	public String update(String post) {
+		return post;
+	}
+	
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String deleteContact(@PathVariable int id) {
