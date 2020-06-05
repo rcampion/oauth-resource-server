@@ -40,6 +40,11 @@ public class SsoController {
     	
     	return authenticationService.authenticateViaSSO(request, response);
     }
+    
+	@RequestMapping(value = "/logout",method = RequestMethod.GET)
+    public void logout(){
+        authenticationService.logout();
+    }
 /*    
     @GetMapping("/sso/login")
     public Map<String, Object> getUserInfo(@AuthenticationPrincipal Jwt principal) {

@@ -288,9 +288,9 @@ public class ContactController {
 		return dto;
 	}
 
-	@MessageMapping("/posts/create")
-	@SendTo("/topic/posts/created")
-	public ContactDto save(ContactDto post) {
+	@MessageMapping("/contacts/create")
+	@SendTo("/topic/contacts/created")
+	public String save(String post) {
 		return post;
 	}
 
@@ -323,5 +323,11 @@ public class ContactController {
 	public String deleteContact(@PathVariable int id) {
 		contactService.deleteContact(id);
 		return Integer.toString(id);
+	}
+	
+	@MessageMapping("/contacts/delete")
+	@SendTo("/topic/contacts/deleted")
+	public String delete(String post) {
+		return post;
 	}
 }
