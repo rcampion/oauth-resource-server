@@ -41,7 +41,7 @@ public class SsoController {
     	return authenticationService.authenticateViaSSO(request, response);
     }
     
-	@RequestMapping(value = "/logout",method = RequestMethod.GET)
+    @RequestMapping(value = "/logout",method = RequestMethod.GET)
     public void logout(){
         authenticationService.logout();
     }
