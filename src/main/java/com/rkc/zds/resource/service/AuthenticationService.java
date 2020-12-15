@@ -1,5 +1,7 @@
 package com.rkc.zds.resource.service;
 
+import java.security.Principal;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -152,21 +154,28 @@ public class AuthenticationService {
 	}
 	
 	/**
-	 * Logout a user - Clear the Spring Security context - Remove the stored
-	 * UserDTO secret
+	 * Logout a user - Clear the Spring Security context - Remove the stored UserDTO
+	 * secret
 	 */
 	public void logout() {
 		if (SecurityContextHolder.getContext().getAuthentication() != null
 				&& SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
-			// SecurityUser securityUser = (SecurityUser)
-			// SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-			User securityUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-			// UserDto userDTO = userService.findById(securityUser.getId());
-			UserDto userDTO = userService.findByUserName(securityUser.getUsername());
-			if (userDTO != null) {
-				userDTO.setPublicSecret(null);
-			}
 
+			KeycloakAuthenticationToken authentication = (KeycloakAuthenticationToken) SecurityContextHolder
+					.getContext().getAuthentication();
+
+			Principal principal = (Principal) authentication.getPrincipal();
+
+			if (principal instanceof KeycloakPrincipal) {
+
+				KeycloakPrincipal<KeycloakSecurityContext> kPrincipal = (KeycloakPrincipal<KeycloakSecurityContext>) principal;
+
+				AccessToken token = kPrincipal.getKeycloakSecurityContext().getToken();
+				UserDto userDTO = userService.findByUserName(token.getPreferredUsername());
+				if (userDTO != null) {
+					userDTO.setPublicSecret(null);
+				}
+			}
 		}
 	}
 
