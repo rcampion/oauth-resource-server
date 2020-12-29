@@ -57,6 +57,17 @@ public class UserDto implements java.io.Serializable  {
 	
 	@Column(name="IMAGE")	
     private String image;
+	
+	@Column(name="ISLOGGEDIN")	
+    private int isLoggedIn;	
+
+    public int getIsLoggedIn() {
+		return isLoggedIn;
+	}
+
+	public void setIsLoggedIn(int isLoggedIn) {
+		this.isLoggedIn = isLoggedIn;
+	}
 
     public String getEmail() {
 		return email;

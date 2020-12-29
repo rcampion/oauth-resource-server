@@ -1,11 +1,20 @@
 package com.rkc.zds.resource.service.impl;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Response;
 
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UsersResource;
+import org.keycloak.representations.idm.CredentialRepresentation;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -86,8 +95,6 @@ public class UserServiceImpl implements UserService {
 
 	}
 
-	
-
 	@Override
 	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	public void deleteUser(int id) {
@@ -117,8 +124,11 @@ public class UserServiceImpl implements UserService {
 			throw new UserAlreadyExistException("There is an account with that userName: " + accountDto.getLogin());
 		}
 
+		String keycloakPassword = accountDto.getPassword();
+
 		accountDto.setPassword(passwordEncoder.encode(accountDto.getPassword()));
 		accountDto.setEnabled(1);
+		accountDto.setIsLoggedIn(0);		
 		UserDto user = userRepository.save(accountDto);
 
 		AuthorityDto role = new AuthorityDto();
@@ -126,6 +136,47 @@ public class UserServiceImpl implements UserService {
 		role.setAuthority("ROLE_USER");
 
 		authorityRepository.save(role);
+
+		// String realm = "zdslogic";
+		String realm = "master";
+
+		Keycloak kc = Keycloak.getInstance("https://www.zdslogic.com/keycloak/auth", "zdslogic", "richard.campion",
+				"ArcyAdmin8246+", "admin-cli");		
+
+		CredentialRepresentation credential = new CredentialRepresentation();
+		credential.setType(CredentialRepresentation.PASSWORD);
+		credential.setValue(keycloakPassword);
+
+		UserRepresentation keycloakUser = new UserRepresentation();
+		keycloakUser.setUsername(accountDto.getLogin());
+		keycloakUser.setFirstName(accountDto.getFirstName());
+		keycloakUser.setLastName(accountDto.getLastName());
+		keycloakUser.setEmail(accountDto.getEmail());
+		keycloakUser.setCredentials(Arrays.asList(credential));
+		keycloakUser.setEnabled(true);
+		keycloakUser.setRealmRoles(Arrays.asList("user"));
+
+		// Get realm
+		RealmResource realmResource = kc.realm("zdslogic");
+		UsersResource usersRessource = realmResource.users();
+
+		// Create Keycloak user
+		Response result = null;
+		try {
+			result = usersRessource.create(keycloakUser);
+		} catch (Exception e) {
+			System.out.println(e);
+		}
+
+		if (result == null || result.getStatus() != 201) {
+			System.err.println("Couldn't create Keycloak user.");
+			UserDto temp = userRepository.findByLogin(accountDto.getLogin());
+			userRepository.delete(temp);
+			authorityRepository.delete(role);
+
+		} else {
+			System.out.println("Keycloak user created.... verify in keycloak!");
+		}
 
 		return user;
 

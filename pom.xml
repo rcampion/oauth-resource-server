@@ -35,6 +35,12 @@
 		</dependency>
 		
 		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-admin-client</artifactId>
+			<version>${keycloak.version}</version>
+		</dependency>
+				
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
@@ -188,6 +194,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<guava.version>28.2-jre</guava.version>
+		<keycloak.version>10.0.1</keycloak.version>
 	</properties>
 
 </project>
