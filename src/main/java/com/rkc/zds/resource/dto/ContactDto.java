@@ -19,7 +19,8 @@ public class ContactDto implements java.io.Serializable {
 	@Id
 	@Column(name="CONTACT_ID", unique = true, nullable = false)
 	@GeneratedValue(strategy=GenerationType.AUTO)
-	private int id;
+	private Integer id;
+	private Integer userId;
 	private String firstName;
 	private String lastName;
 	private String title;
@@ -42,12 +43,21 @@ public class ContactDto implements java.io.Serializable {
 		this.company = company;
 	}
 
-	public int getId() {
-		return this.id;
+	public Integer getId() {
+		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(Integer id) {
 		this.id = id;
+	}
+
+	@Column(name = "USER_ID")
+	public Integer getUserId() {
+		return userId;
+	}
+
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 
 	@Column(name = "FIRSTNAME", nullable = false, length = 100)

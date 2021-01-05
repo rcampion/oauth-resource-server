@@ -30,6 +30,18 @@ public class UserDto implements java.io.Serializable  {
 	@Column(name="ID", unique = true)
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private Integer id;
+	
+    public UserDto() {
+    }
+    
+	public UserDto(String userName, String password, int enabled) {
+		this.userName = userName;
+		this.password = password;
+		this.enabled = enabled;
+	}
+
+	@Column(name="CONTACT_ID")
+	private Integer contactId;
 
 	@Column(name="LOGIN")
     private String login;
@@ -60,39 +72,7 @@ public class UserDto implements java.io.Serializable  {
 	
 	@Column(name="ISLOGGEDIN")	
     private int isLoggedIn;	
-
-    public int getIsLoggedIn() {
-		return isLoggedIn;
-	}
-
-	public void setIsLoggedIn(int isLoggedIn) {
-		this.isLoggedIn = isLoggedIn;
-	}
-
-    public String getEmail() {
-		return email;
-	}
-
-	public void setEmail(String email) {
-		this.email = email;
-	}
-
-	public String getBio() {
-		return bio;
-	}
-
-	public void setBio(String bio) {
-		this.bio = bio;
-	}
-
-	public String getImage() {
-		return image;
-	}
-
-	public void setImage(String image) {
-		this.image = image;
-	}
-
+	
 	@OneToMany(cascade = {CascadeType.ALL, CascadeType.REMOVE}, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(nullable=true, name = "userName", referencedColumnName = "userName")
 	@ElementCollection(targetClass=AuthorityDto.class)
@@ -110,15 +90,6 @@ public class UserDto implements java.io.Serializable  {
     private String privateSecret;
 
     private Profile profile;
-    
-    public UserDto() {
-    }
-    
-	public UserDto(String userName, String password, int enabled) {
-		this.userName = userName;
-		this.password = password;
-		this.enabled = enabled;
-	}
 
 	public Integer getId() {
 		return id;
@@ -174,6 +145,46 @@ public class UserDto implements java.io.Serializable  {
 
 	public void setLastName(String lastName) {
 		this.lastName = lastName;
+	}
+	
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getBio() {
+		return bio;
+	}
+
+	public void setBio(String bio) {
+		this.bio = bio;
+	}
+
+	public String getImage() {
+		return image;
+	}
+
+	public void setImage(String image) {
+		this.image = image;
+	}
+	
+    public int getIsLoggedIn() {
+		return isLoggedIn;
+	}
+
+	public void setIsLoggedIn(int isLoggedIn) {
+		this.isLoggedIn = isLoggedIn;
+	}
+	
+	public Integer getContactId() {
+		return contactId;
+	}
+
+	public void setContactId(Integer contactId) {
+		this.contactId = contactId;
 	}
 /*	
 	public Set<AuthorityDto> getAuthorities() {
@@ -267,7 +278,6 @@ public class UserDto implements java.io.Serializable  {
 		this.password = password;
 		this.bio = bio;
 		this.image = image;
-		
 	}
 	
 /*

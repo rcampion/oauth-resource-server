@@ -1,6 +1,7 @@
 package com.rkc.zds.resource.service;
 
 import java.security.Principal;
+import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -8,6 +9,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.keycloak.KeycloakPrincipal;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
+import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.RealmResource;
+import org.keycloak.admin.client.resource.UserResource;
+import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.IDToken;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +20,18 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Service;
 
+import com.rkc.zds.resource.model.Message;
+import com.rkc.zds.resource.model.Node;
 import com.rkc.zds.resource.dto.UserDto;
 
 @Service
@@ -148,17 +158,32 @@ public class AuthenticationService {
 	 *                       userDTO.setProfile(securityUser.getProfile()); return
 	 *                       userDTO; }
 	 */
-	public UserDto authenticateViaSSO(HttpServletRequest request, HttpServletResponse response) {
+	public UserDto authenticateViaSSO(HttpServletRequest request, HttpServletResponse response) throws InterruptedException {
 
 		KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) request.getUserPrincipal();
-		KeycloakPrincipal principal = (KeycloakPrincipal) token.getPrincipal();
+		KeycloakPrincipal<?> principal = (KeycloakPrincipal) token.getPrincipal();
 		KeycloakSecurityContext session = principal.getKeycloakSecurityContext();
 		AccessToken accessToken = session.getToken();
+
+		Collection<GrantedAuthority> roles = token.getAuthorities();
+		
+		System.out.println("User:" + accessToken.getPreferredUsername());
+		for (String role : token.getAccount().getRoles()) {
+			System.out.println("===========+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Role : " + role);
+		}
+
 		String userName = accessToken.getPreferredUsername();
 		UserDto userDTO = userService.findByUserName(userName);
-
+		userDTO.setIsLoggedIn(1);
+		userService.saveUser(userDTO);
+		
 		// send a message to subscribed apps that a user has logged in
-		webSocket.convertAndSend("/topic/user/auth", userDTO);
+		//TimeUnit.SECONDS.sleep(2);
+		Message<UserDto> message = new Message();
+		Node<UserDto> node = new Node<UserDto>(userDTO);
+		message.setData(node);
+		message.setMessage("Logged In");
+		webSocket.convertAndSend("/topic/user/auth", message);
 
 		return userDTO;
 	}
@@ -174,35 +199,63 @@ public class AuthenticationService {
 
 		return userDTO;
 	}
+
 	/**
-	 * Logout a user - Clear the Spring Security context - Remove the stored UserDTO
-	 * secret
+	 * Logout a user
 	 */
-	public void logout() {
-		
+	public void logout(HttpServletRequest request, HttpServletResponse response) {
+
 		UserDto userDTO = null;
-		
+
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
 		if (SecurityContextHolder.getContext().getAuthentication() != null
 				&& SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
 
-			KeycloakAuthenticationToken authentication = (KeycloakAuthenticationToken) SecurityContextHolder
-					.getContext().getAuthentication();
+			if (auth instanceof KeycloakAuthenticationToken) {
+				KeycloakAuthenticationToken authentication = (KeycloakAuthenticationToken) SecurityContextHolder
+						.getContext().getAuthentication();
 
-			Principal principal = (Principal) authentication.getPrincipal();
+				Principal principal = (Principal) authentication.getPrincipal();
 
-			if (principal instanceof KeycloakPrincipal) {
+				if (principal instanceof KeycloakPrincipal) {
 
-				KeycloakPrincipal<KeycloakSecurityContext> kPrincipal = (KeycloakPrincipal<KeycloakSecurityContext>) principal;
+					KeycloakPrincipal<KeycloakSecurityContext> kPrincipal = (KeycloakPrincipal<KeycloakSecurityContext>) principal;
 
-				AccessToken token = kPrincipal.getKeycloakSecurityContext().getToken();
-				userDTO = userService.findByUserName(token.getPreferredUsername());
-				if (userDTO != null) {
-					userDTO.setPublicSecret(null);
+					AccessToken token = kPrincipal.getKeycloakSecurityContext().getToken();
+					userDTO = userService.findByUserName(token.getPreferredUsername());
+					if (userDTO != null) {
+						userDTO.setPublicSecret(null);
+						userDTO.setIsLoggedIn(0);
+						userService.saveUser(userDTO);
+					}
+
+					Keycloak kc = Keycloak.getInstance("https://www.zdslogic.com/keycloak/auth", "zdslogic",
+							"richard.campion", "ArcyAdmin8246+", "admin-cli");
+
+					// Get realm
+					RealmResource realmResource = kc.realm("zdslogic");
+					UsersResource usersResource = realmResource.users();
+
+					// AssertEvents events = new AssertEvents(this);
+					String userId = kPrincipal.getName();
+
+					UserResource user = usersResource.get(userId);
+					user.logout();
 				}
 			}
+
+			new SecurityContextLogoutHandler().logout(request, response, auth);
 		}
-		
-		webSocket.convertAndSend("/topic/user/auth", userDTO);
+
+		Message<UserDto> message = new Message();
+		Node<UserDto> node = new Node<UserDto>(userDTO);
+		message.setData(node);
+		message.setMessage("Logged Out");
+
+		// send a message to subscribed apps that session has expired
+		System.out.println("Sending Logout Message");
+		webSocket.convertAndSend("/topic/user/auth", message);
 
 	}
 

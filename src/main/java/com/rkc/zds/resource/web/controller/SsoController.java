@@ -66,9 +66,10 @@ public class SsoController {
 	}
 
 	@RequestMapping(value = "/sso/logout", method = RequestMethod.GET)
-	public void logout() {
-		authenticationService.logout();
+	public void logout(HttpServletRequest request, HttpServletResponse response) {
+		authenticationService.logout(request, response);
 	}
+	
 	/*
 	 * @GetMapping("/sso/login") public Map<String, Object>
 	 * getUserInfo(@AuthenticationPrincipal Jwt principal) { return
