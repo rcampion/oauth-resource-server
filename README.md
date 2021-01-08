@@ -9,4 +9,4 @@ Using Keycloak for SSO.
 
 Using WebSockets for CRUD transactions to keep browsers in synch.
 
-Added File Upload functionality
+Added File Upload functionality for Images
