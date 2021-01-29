@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -79,19 +80,39 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		super.configure(http);
+		
+		http.sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+        .maximumSessions(1);
+		
+		http.authorizeRequests()
+		.antMatchers(HttpMethod.POST, "/api/uploadFile", "/api/uploadResume", "/api/sso/getuser", "/api/dashboard*",
+				"/api/dashboard/**", "/api/dashboard/email**", "/api/dashboard/email/**",
+				"/api/dashboard/email/send", "/api/dashboard/email/send/**", "/api/user/registration",
+				"/live**", "/live/**", "/live/info*")
+		.permitAll();
+		
+		http.csrf()
+		// ignore our stomp endpoints since they are protected using Stomp headers
+		.ignoringAntMatchers("/live/**").and().headers()
+		// allow same origin to frame our site to support iframe SockJS
+		.frameOptions().sameOrigin().and().authorizeRequests();
 
-        http.cors()
-        .and()
-          .authorizeRequests()
-            .antMatchers(HttpMethod.GET, "/api/articles**", "/api/tags*", "/live/info*")
-              .permitAll()
-            .antMatchers(HttpMethod.POST, "/api/sso/login")
-              .permitAll()
-            .anyRequest()
-              .authenticated()
-        .and()
-          .oauth2ResourceServer()
-            .jwt();
+		http.cors().and().authorizeRequests()
+		.antMatchers(HttpMethod.GET, "api/user/contacts*","api/user/contacts/friends/*","api/user/contacts/friends*", "data/files/uploads/*","/api/users/active", "/api/sso/logout", "/api/log*", "/api/log/**", "/api/log/pageviews*",
+				"/api/errorlog*", "/api/errorlog/**", "/api/articles*", "/api/tags*", "/live**", "/live/**",
+				"/live/info*", "/api/dashboard/whois*", "/api/dashboard/whois/**")
+		.permitAll()
+		.antMatchers(HttpMethod.POST, "/api/uploadFile", "/api/uploadResume", "/api/sso/getuser", "/api/dashboard*",
+				"/api/dashboard/**", "/api/dashboard/email**", "/api/dashboard/email/**",
+				"/api/dashboard/email/send", "/api/dashboard/email/send/**", "/api/user/registration",
+				"/live**", "/live/**", "/live/info*")
+		.permitAll()
+
+		.and().oauth2ResourceServer().jwt();
+        
+		http.csrf().disable(); // ADD THIS CODE TO DISABLE CSRF IN PROJECT.**
+
 	}
 
 	/**
